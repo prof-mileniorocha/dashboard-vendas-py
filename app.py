@@ -21,13 +21,20 @@ col1, col2 = st.columns(2)
 with col1:
     regiao = st.selectbox("Filtrar por região", options=["Todas"] + sorted(df["region"].dropna().unique()))
 with col2:
-    hora = st.select_slider("Filtrar por horário", options=sorted(df["hour"].unique()))
+    hora = st.select_slider(
+        "Filtrar por horário (opcional)", 
+        options=["Todos"] + sorted(df["hour"].unique()),
+        value="Todos"
+    )
 
 # Aplica filtros
 df_filtrado = df.copy()
+
 if regiao != "Todas":
     df_filtrado = df_filtrado[df_filtrado["region"] == regiao]
-df_filtrado = df_filtrado[df_filtrado["hour"] == hora]
+
+if hora != "Todos":
+    df_filtrado = df_filtrado[df_filtrado["hour"] == hora]
 
 # Exibe filtros aplicados
 st.markdown(f"### 🔍 Filtros aplicados: Região = `{regiao}` | Hora = `{hora}`")
@@ -38,8 +45,8 @@ colm1.metric("Total de Vendas", int(df_filtrado["purchases"].sum()))
 colm2.metric("Total de Acessos", int(df_filtrado["access_count"].sum()))
 colm3.metric("Erros 500", int(df_filtrado["errors_500"].sum()))
 
-# Gráficos (mostrando dados filtrados para foco no horário/região)
-st.subheader(f"📈 Métricas detalhadas para o horário: {hora}")
+# Gráficos
+st.subheader(f"📈 Métricas detalhadas {'para o horário: ' + str(hora) if hora != 'Todos' else ''}")
 col3, col4, col5 = st.columns(3)
 
 with col3:
@@ -81,11 +88,3 @@ st.info("⚠️ Nenhuma campanha ativa durante o período da noite.")
 # Informações de manutenção
 st.subheader("🛠️ Manutenção Técnica")
 st.warning("ℹ️ Manutenção programada detectada às 23h - possível causa de erros.")
-
-# Espaço para interação do usuário (feedback, hipóteses)
-st.subheader("📝 Sua hipótese")
-hipotese = st.text_area("O que você acha que está impactando as vendas?")
-
-if hipotese:
-    st.success("Obrigado por compartilhar sua hipótese! Detetives atentos fazem toda a diferença. 🔍")
-
