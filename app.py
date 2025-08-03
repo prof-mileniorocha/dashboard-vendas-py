@@ -62,16 +62,3 @@ with col5:
         color_discrete_sequence=["#ef553b"]
     )
     st.plotly_chart(fig_erros, use_container_width=True)
-
-# Tabela de reclamações
-st.subheader("📬 Reclamações por Horário (simuladas)")
-reclamacoes = df_filtrado[df_filtrado["reclamacoes"] > 0][["hora", "reclamacoes"]]
-st.dataframe(reclamacoes, use_container_width=True)
-
-# Texto sobre campanhas
-st.subheader("📢 Campanhas de Marketing Ativas")
-st.info("⚠️ Nenhuma campanha ativa durante o período da noite.")
-
-# Informações de manutenção
-st.subheader("🛠️ Manutenção Técnica")
-st.warning("ℹ️ Manutenção programada detectada às 23h - possível causa de erros.")
