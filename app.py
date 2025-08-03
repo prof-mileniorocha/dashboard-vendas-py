@@ -7,79 +7,66 @@ st.set_page_config(layout="wide")
 # Carrega dados
 df = pd.read_csv("dados/dados_vendas_simulados.csv")
 
+# Renomear colunas para português
+df = df.rename(columns={
+    "purchases": "vendas",
+    "access_count": "acessos",
+    "errors_500": "erros_500",
+    "complaints": "reclamacoes",
+    "hour": "hora",
+    "region": "regiao"
+})
+
 st.title("📊 Dashboard de Vendas e Acessos por Horário")
-
-st.markdown("""
-### 🕵️‍♂️ O Detetive de Dados
-
-A loja notou uma queda de **30% nas vendas entre 18h e 22h**.  
-Seu trabalho é investigar **o que está acontecendo** com base nos dados abaixo.
-""")
 
 # Filtros
 col1, col2 = st.columns(2)
 with col1:
-    regiao = st.selectbox("Filtrar por região", options=["Todas"] + sorted(df["region"].dropna().unique()))
+    regiao = st.selectbox("Filtrar por região", options=["Todas"] + sorted(df["regiao"].dropna().unique()))
 with col2:
-    hora = st.select_slider(
-        "Filtrar por horário (opcional)", 
-        options=["Todos"] + sorted(df["hour"].unique()),
-        value="Todos"
-    )
+    hora = st.select_slider("Filtrar por horário (opcional)", options=["Todos"] + sorted(df["hora"].unique()), value="Todos")
 
-# Aplica filtros
-df_filtrado = df.copy()
-
+# Aplica filtro de região
 if regiao != "Todas":
-    df_filtrado = df_filtrado[df_filtrado["region"] == regiao]
+    df = df[df["regiao"] == regiao]
 
+# Aplica filtro de hora apenas se selecionado diferente de "Todos"
 if hora != "Todos":
-    df_filtrado = df_filtrado[df_filtrado["hour"] == hora]
-
-# Exibe filtros aplicados
-st.markdown(f"### 🔍 Filtros aplicados: Região = `{regiao}` | Hora = `{hora}`")
-
-# Métricas rápidas
-colm1, colm2, colm3 = st.columns(3)
-colm1.metric("Total de Vendas", int(df_filtrado["purchases"].sum()))
-colm2.metric("Total de Acessos", int(df_filtrado["access_count"].sum()))
-colm3.metric("Erros 500", int(df_filtrado["errors_500"].sum()))
+    df_filtrado = df[df["hora"] == hora]
+else:
+    df_filtrado = df
 
 # Gráficos
-st.subheader(f"📈 Métricas detalhadas {'para o horário: ' + str(hora) if hora != 'Todos' else ''}")
+st.subheader(f"📈 Métricas para o horário: {hora if hora != 'Todos' else 'Todos os horários'}")
 col3, col4, col5 = st.columns(3)
 
 with col3:
     fig_vendas = px.bar(
-        df_filtrado, x="hour", y="purchases", title="Vendas por Horário",
+        df_filtrado, x="hora", y="vendas",
+        title="Vendas por Horário",
         color_discrete_sequence=["#00cc96"]
     )
     st.plotly_chart(fig_vendas, use_container_width=True)
 
 with col4:
     fig_acessos = px.line(
-        df_filtrado, x="hour", y="access_count", title="Acessos por Horário",
-        markers=True
+        df_filtrado, x="hora", y="acessos",
+        title="Acessos por Horário", markers=True
     )
     st.plotly_chart(fig_acessos, use_container_width=True)
 
 with col5:
     fig_erros = px.area(
-        df_filtrado, x="hour", y="errors_500", title="Erros 500 por Horário",
+        df_filtrado, x="hora", y="erros_500",
+        title="Erros 500 por Horário",
         color_discrete_sequence=["#ef553b"]
     )
     st.plotly_chart(fig_erros, use_container_width=True)
 
-# Tabela de reclamações — só se existir a coluna complaints
-if "complaints" in df.columns:
-    st.subheader("📬 Reclamações por Horário (simuladas)")
-    reclamacoes = df_filtrado[df_filtrado["complaints"] > 0][["hour", "complaints"]]
-    if not reclamacoes.empty:
-        st.dataframe(reclamacoes, use_container_width=True)
-    else:
-        st.info("Nenhuma reclamação registrada para o filtro aplicado.")
-else:
-    st.warning("Coluna 'complaints' não encontrada nos dados.")
+# Tabela de reclamações
+st.subheader("📬 Reclamações por Horário (simuladas)")
+reclamacoes = df_filtrado[df_filtrado["reclamacoes"] > 0][["hora", "reclamacoes"]]
+st.dataframe(reclamacoes, use_container_width=True)
 
 # Texto sobre campanhas
 st.subheader("📢 Campanhas de Marketing Ativas")
